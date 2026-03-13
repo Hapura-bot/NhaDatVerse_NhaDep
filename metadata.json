@@ -1,0 +1,5 @@
+{
+  "name": "NhaDatVerse - AI Script Studio",
+  "description": "Phân tích video tham khảo và tạo lời thoại tiếng Việt mới cho TikTok",
+  "requestFramePermissions": ["microphone"]
+}
