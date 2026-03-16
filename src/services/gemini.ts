@@ -313,9 +313,44 @@ export async function chatWithBot(history: { role: string; text: string }[], mes
     model: "gemini-3.1-pro-preview",
     contents,
     config: {
-      systemInstruction: "Bạn là trợ lý AI chuyên về kịch bản TikTok nhà đẹp. Hãy trả lời ngắn gọn, súc tích bằng tiếng Việt, giúp người dùng cải thiện kịch bản hoặc giải đáp thắc mê về video.",
+      systemInstruction: "Bạn là trợ lý AI chuyên về kịch bản TikTok nhà đẹp. Hãy trả lời ngắn gọn, súc tích bằng tiếng Việt, giúp người dùng cải thiện kịch bản hoặc giải đáp thắc mắc về video.",
     }
   }));
 
   return response.text || "";
+}
+
+// ==========================================
+// TÍNH NĂNG MỚI: TẠO ẢNH TRÊN VERTEX AI
+// ==========================================
+export async function generateImage(
+  prompt: string,
+  aspectRatio: "1:1" | "16:9" | "9:16" | "auto" = "auto"
+): Promise<string | undefined> {
+  const response = await withRetry(() => ai.models.generateContent({
+    model: "gemini-3.1-flash-image-preview",
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    config: {
+      temperature: 1,
+      topP: 0.95,
+      // Ép model trả về định dạng Hình Ảnh
+      responseModalities: [Modality.IMAGE], 
+      imageConfig: {
+        aspectRatio: aspectRatio,
+        imageSize: "1K",
+        outputMimeType: "image/png"
+      },
+      thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH }
+    }
+  }));
+
+  // Trích xuất chuỗi base64 của ảnh từ response
+  const parts = response.candidates?.[0]?.content?.parts || [];
+  const imagePart = parts.find(p => p.inlineData);
+  
+  if (imagePart?.inlineData) {
+    return imagePart.inlineData.data; // Dùng làm src cho thẻ <img>: `data:image/png;base64,${data}`
+  }
+  
+  return undefined;
 }
