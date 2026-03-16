@@ -1,6 +1,12 @@
 import { GoogleGenAI, Type, ThinkingLevel, Modality } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY,
+  vertexai: {
+    project: process.env.GCP_PROJECT_ID || import.meta.env.VITE_GCP_PROJECT_ID,
+    location: process.env.GCP_LOCATION || import.meta.env.VITE_GCP_LOCATION
+  }
+});
 
 async function withRetry<T>(fn: () => Promise<T>, maxRetries: number = 3): Promise<T> {
   let lastError: any;
